@@ -17,6 +17,8 @@ def get_b(ak,bk):
 
 def generate_b(wavecar,filename,bands):
     wav=vaspwfc(wavecar,lsorbit=True)
+    if bands[0]==-1:
+        bands=range(wav._nbands)
     data_r=[[wav.readBandCoeff(ikpt=ikpt+1,iband=iband+1,norm=False) for ikpt in range(wav._nkpts)] for iband in range(wav._nbands)]
     b=[[get_b(data_r[iband][ikpt][:int(len(data_r[iband][ikpt])/2)],data_r[iband][ikpt][int(len(data_r[iband][ikpt])/2):]) for ikpt in range(wav._nkpts)] for iband in bands]
     dk=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
