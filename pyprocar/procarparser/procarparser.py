@@ -130,6 +130,7 @@ class ProcarParser:
         self.log.debug("The first match found is: " + str(self.kpoints[0]))
 
         # trying to build an array
+        self.kpoints = [x.replace("-"," -") for x in self.kpoints]
         self.kpoints = [x.split() for x in self.kpoints]
         try:
             self.kpoints = np.array(self.kpoints, dtype=float)

@@ -10,7 +10,7 @@ import re
 
 
   
-def bandsplot(file,mode='scatter',color='blue',abinit_output=None,spin='0',atoms=None,orbitals=None,fermi=None,elimit=None,mask=None,markersize=0.02,cmap='jet',vmax=None,vmin=None,grid=True,marker='o',permissive=False,human=False,savefig=None,kticks=None,knames=None,title=None,outcar=None,kpointsfile=None):
+def bandsplot(file,mode='scatter',color='blue',abinit_output=None,spin='0',atoms=None,orbitals=None,fermi=None,elimit=None,mask=None,markersize=0.02,cmap='jet',vmax=None,vmin=None,grid=True,marker='o',permissive=False,human=False,savefig=None,kticks=None,knames=None,title=None,outcar=None,kpointsfile=None,external_file=None):
   #First handling the options, to get feedback to the user and check
   #that the input makes sense.
   #It is quite long
@@ -129,7 +129,7 @@ def bandsplot(file,mode='scatter',color='blue',abinit_output=None,spin='0',atoms
   
   #The spin argument should be a number (index of an array), or
   #'st'. In the last case it will be handled separately (later)
-  spin = {'0':0, '1':1, '2':2, '3':3, 'st':'st'}[spin]
+  spin = {'0':0, '1':1, '2':2, '3':3, 'st':'st', 'b':'b'}[spin]
 
 
   #The second part of this function is parse/select/use the data in
@@ -174,6 +174,36 @@ def bandsplot(file,mode='scatter',color='blue',abinit_output=None,spin='0',atoms
     ##print sin, cos
     #storing the spin projection into the original array
     data.spd = -sin*dataX.spd + cos*dataY.spd
+  elif spin is 'b':
+    if external_file is None:
+        print("Please provide the <b>-value file.")
+        return 
+    rf = open(external_file)
+    lines = rf.readlines()
+    counter = 0
+    color_kvector = []
+    color_eigen = []
+    for iline in lines:
+        if counter < 2:
+            if 'band' in iline:
+                counter += 1
+                continue
+            temp = [float(x) for x in iline.split()]
+            color_kvector.append([temp[0],temp[1],temp[2]])
+    counter = -1
+    for iline in lines :
+        if 'band' in iline:
+            counter += 1
+            iband = int(iline.split()[-1])
+            color_eigen.append([])
+            continue
+        color_eigen[counter].append(float(iline.split()[-1]))
+    rf.close()
+    color_kvector = np.array(color_kvector)
+    data.spd=np.zeros((len(data.kpoints),counter+1))
+    for i in range(len(data.kpoints)):
+        for j in range(counter+1):
+            data.spd[i][j]=2*np.log10(color_eigen[j][i])
   else:
     data.selectIspin([spin])
     data.selectAtoms(atoms, fortran=human)

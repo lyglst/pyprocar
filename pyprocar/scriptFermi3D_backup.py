@@ -300,7 +300,38 @@ def fermi3D(procar,outcar,bands,scale=1,mode='plain',st=False,**kwargs):
     
     cell=mg.io.vasp.inputs.Poscar.from_file("POSCAR",False,False)
     #poly = get_wigner_seitz(recLat)
-    poly=cell.structure.lattice.get_brillouin_zone(); 
+    poly=cell.structure.lattice.get_brillouin_zone();
+    # plot brilliouin zone 
+    if plotting_package == 'mayavi'  :
+        #brillouin_point = []
+        #brillouin_faces = []
+        #point_count = 0
+        #for iface in poly :
+        #    single_face = []
+        #    for ipoint in iface:
+        #        single_face.append(point_count)
+        #        brillouin_point.append(list(ipoint))
+        #        point_count += 1 
+        #    brillouin_faces.append(single_face)
+        #polydata_br = tvtk.PolyData(points=brillouin_point,polys=brillouin_faces)
+        #mlab.pipeline.surface(polydata_br,representation='wireframe',color=(0,0,0),line_width=4,name="BRZ")
+    elif plotting_package == 'plotly' :
+        
+        for iface in poly :
+            iface = np.pad(iface,((0,1),(0,0)),'wrap')
+            x,y,z = iface[:,0],iface[:,1],iface[:,2]
+            plane = go.Scatter3d(x=x,y=y,z=z,mode='lines',line=dict(color='black',width=4))
+            figs.append(plane)
+            
+    elif plotting_package == 'matplotlib' : 
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        brillouin_zone = Poly3DCollection(poly,facecolors=["None"]*len(poly),alpha=1,linewidth=4)
+        brillouin_zone.set_edgecolor("k")
+        ax.add_collection3d(brillouin_zone,zs=0,zdir='z')
+
+            
+        
     br_points = []
     for iface in poly :
         for ipoint in iface:
@@ -653,39 +684,7 @@ def fermi3D(procar,outcar,bands,scale=1,mode='plain',st=False,**kwargs):
                 colormap = ['rgb(%i,%i,%i)' % (x[0],x[1],x[2]) for x in (face_colors*255).round()]
                 ipv.figure()
                 ipv.plot_trisurf(verts[:,0],verts[:,1],verts[:,2], triangles=faces,color=cmap)
-   
-    cell=mg.io.vasp.inputs.Poscar.from_file("POSCAR",False,False)
-    #poly = get_wigner_seitz(recLat)
-    poly=cell.structure.lattice.get_brillouin_zone();
-    # plot brilliouin zone 
-    if plotting_package == 'mayavi'  :
-        brillouin_point = []
-        brillouin_faces = []
-        point_count = 0
-        for iface in poly :
-            single_face = []
-            for ipoint in iface:
-                single_face.append(point_count)
-                brillouin_point.append(list(ipoint))
-                point_count += 1 
-            brillouin_faces.append(single_face)
-        polydata_br = tvtk.PolyData(points=brillouin_point,polys=brillouin_faces)
-        mlab.pipeline.surface(polydata_br,representation='wireframe',color=(0,0,0),line_width=4,name="BRZ")
-    elif plotting_package == 'plotly' :
-
-        for iface in poly :
-            iface = np.pad(iface,((0,1),(0,0)),'wrap')
-            x,y,z = iface[:,0],iface[:,1],iface[:,2]
-            plane = go.Scatter3d(x=x,y=y,z=z,mode='lines',line=dict(color='black',width=4))
-            figs.append(plane)
-
-    elif plotting_package == 'matplotlib' :
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        brillouin_zone = Poly3DCollection(poly,facecolors=["None"]*len(poly),alpha=1,linewidth=4)
-        brillouin_zone.set_edgecolor("k")
-        ax.add_collection3d(brillouin_zone,zs=0,zdir='z')
-
+                
     if plotting_package == 'mayavi':
         mlab.colorbar(orientation='vertical')#,label_fmt='%.1f')
         mlab.show()
